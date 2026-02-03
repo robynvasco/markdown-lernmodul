@@ -198,6 +198,16 @@ class ilObjMarkdownLernmodulGUI extends ilObjectPluginGUI
             $result = $db->query($query);
             $page = $db->fetchAssoc($result);
             
+            // Fetch all pages for sidebar navigation
+            $all_pages_query = "SELECT id, title FROM rep_robj_xmdl_pages 
+                               WHERE module_id = " . $db->quote($obj_id, 'integer') . "
+                               ORDER BY sort_order ASC";
+            $all_pages_result = $db->query($all_pages_query);
+            $all_pages = [];
+            while ($p = $db->fetchAssoc($all_pages_result)) {
+                $all_pages[] = $p;
+            }
+            
             // Build navigation
             $prev_link = $current_page > 1 ? $DIC->ctrl()->getLinkTarget($this, "view") . "&page=" . ($current_page - 1) : "";
             $next_link = $current_page < $total_pages ? $DIC->ctrl()->getLinkTarget($this, "view") . "&page=" . ($current_page + 1) : "";
@@ -206,80 +216,562 @@ class ilObjMarkdownLernmodulGUI extends ilObjectPluginGUI
             
             $nav_html = "
             <style>
+                /* Container */
+                .lernmodul-wrapper {
+                    background: transparent;
+                    min-height: 70vh;
+                    padding: 20px 0;
+                }
+                
+                .lernmodul-main-layout {
+                    display: flex;
+                    gap: 30px;
+                    max-width: 1200px;
+                    margin: 0;
+                    align-items: flex-start;
+                    padding: 0 20px;
+                }
+                
+                .lernmodul-content-column {
+                    flex: 1;
+                    min-width: 0;
+                    max-width: 900px;
+                }
+                
+                .lernmodul-sidebar-column {
+                    width: 280px;
+                    flex-shrink: 0;
+                    transition: all 0.3s ease;
+                }
+                
+                .lernmodul-sidebar-column.collapsed {
+                    width: 50px;
+                }
+                
+                .lernmodul-container {
+                    background: #ffffff;
+                    border-radius: 16px;
+                    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+                    padding: 40px;
+                    border: 1px solid rgba(255, 255, 255, 0.8);
+                }
+                
+                /* Sidebar */
+                .lernmodul-sidebar {
+                    background: #ffffff;
+                    border-radius: 16px;
+                    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+                    padding: 24px;
+                    position: sticky;
+                    top: 20px;
+                    max-height: calc(100vh - 120px);
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    border: 1px solid rgba(255, 255, 255, 0.8);
+                    transition: all 0.3s ease;
+                }
+                
+                .lernmodul-sidebar-column.collapsed .lernmodul-sidebar {
+                    padding: 12px;
+                }
+                
+                .lernmodul-sidebar-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 16px;
+                }
+                
+                .lernmodul-sidebar-title {
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: #6c757d;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    transition: opacity 0.3s ease;
+                }
+                
+                .lernmodul-sidebar-column.collapsed .lernmodul-sidebar-title {
+                    opacity: 0;
+                    width: 0;
+                }
+                
+                .lernmodul-toggle-btn {
+                    width: 28px;
+                    height: 28px;
+                    border: none;
+                    background: #f3f4f6;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 14px;
+                    color: #6c757d;
+                    transition: all 0.2s;
+                    flex-shrink: 0;
+                }
+                
+                .lernmodul-toggle-btn:hover {
+                    background: #e5e7eb;
+                    color: #4c6586;
+                }
+                
+                .lernmodul-sidebar-column.collapsed .lernmodul-toggle-btn {
+                    transform: rotate(180deg);
+                }
+                
+                .lernmodul-chapter-list {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+                
+                .lernmodul-chapter-item {
+                    margin-bottom: 4px;
+                }
+                
+                .lernmodul-chapter-link {
+                    display: flex;
+                    align-items: center;
+                    padding: 10px 12px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    color: #374151;
+                    font-size: 14px;
+                    transition: all 0.2s;
+                    line-height: 1.4;
+                }
+                
+                .lernmodul-chapter-link:hover {
+                    background: #f3f4f6;
+                    color: #4c6586;
+                }
+                
+                .lernmodul-chapter-link.active {
+                    background: linear-gradient(135deg, #4c6586 0%, #667eea 100%);
+                    color: white;
+                    font-weight: 600;
+                }
+                
+                .lernmodul-chapter-number {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 24px;
+                    height: 24px;
+                    background: rgba(0, 0, 0, 0.05);
+                    border-radius: 6px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    margin-right: 10px;
+                    flex-shrink: 0;
+                }
+                
+                .lernmodul-chapter-link.active .lernmodul-chapter-number {
+                    background: rgba(255, 255, 255, 0.2);
+                }
+                
+                .lernmodul-chapter-title {
+                    flex: 1;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    transition: opacity 0.3s ease;
+                }
+                
+                .lernmodul-sidebar-column.collapsed .lernmodul-chapter-list {
+                    display: none;
+                }
+                
+                .lernmodul-collapsed-indicator {
+                    display: none;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 8px 0;
+                }
+                
+                .lernmodul-sidebar-column.collapsed .lernmodul-collapsed-indicator {
+                    display: flex;
+                }
+                
+                .lernmodul-collapsed-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: #dee2e6;
+                }
+                
+                .lernmodul-collapsed-dot.active {
+                    background: linear-gradient(135deg, #4c6586 0%, #667eea 100%);
+                    width: 10px;
+                    height: 10px;
+                }
+                
+                /* Header with Progress */
                 .lernmodul-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    margin-bottom: 30px;
-                    padding-bottom: 15px;
+                    margin-bottom: 40px;
+                    padding-bottom: 24px;
                     border-bottom: 1px solid #e9ecef;
                 }
+                
                 .lernmodul-nav-controls {
                     display: flex;
                     align-items: center;
-                    gap: 10px;
+                    gap: 12px;
                 }
+                
                 .lernmodul-nav-btn {
-                    width: 40px;
-                    height: 40px;
+                    width: 44px;
+                    height: 44px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     border-radius: 50%;
                     text-decoration: none;
-                    font-size: 18px;
-                    transition: all 0.2s;
-                    border: 1px solid #dee2e6;
+                    font-size: 20px;
+                    transition: all 0.2s ease;
+                    border: 2px solid #dee2e6;
                 }
+                
                 .lernmodul-nav-btn.enabled {
                     background: white;
                     color: #4c6586;
                     border-color: #4c6586;
                 }
+                
                 .lernmodul-nav-btn.enabled:hover {
                     background: #4c6586;
                     color: white;
-                    transform: scale(1.1);
+                    transform: scale(1.08);
+                    box-shadow: 0 4px 12px rgba(76, 101, 134, 0.3);
                 }
+                
                 .lernmodul-nav-btn.disabled {
                     background: #f8f9fa;
                     color: #adb5bd;
                     border-color: #dee2e6;
                     cursor: not-allowed;
                 }
+                
                 .lernmodul-page-counter {
-                    font-size: 14px;
+                    font-size: 15px;
                     color: #6c757d;
-                    font-weight: 500;
-                    min-width: 60px;
+                    font-weight: 600;
+                    min-width: 70px;
                     text-align: center;
                 }
+                
                 .lernmodul-progress-container {
                     flex-grow: 1;
-                    max-width: 200px;
-                    margin-right: 20px;
+                    max-width: 220px;
+                    margin-right: 24px;
                 }
+                
                 .lernmodul-progress-bar {
                     width: 100%;
-                    height: 4px;
+                    height: 6px;
                     background: #e9ecef;
-                    border-radius: 2px;
+                    border-radius: 3px;
                     overflow: hidden;
                 }
+                
                 .lernmodul-progress-fill {
                     height: 100%;
-                    background: #4c6586;
-                    border-radius: 2px;
-                    transition: width 0.3s ease;
+                    background: linear-gradient(90deg, #4c6586 0%, #667eea 100%);
+                    border-radius: 3px;
+                    transition: width 0.4s ease;
                 }
+                
                 .lernmodul-progress-text {
-                    font-size: 11px;
+                    font-size: 12px;
                     color: #6c757d;
-                    text-align: right;
-                    margin-top: 4px;
+                    text-align: left;
+                    margin-top: 6px;
+                    font-weight: 500;
+                }
+                
+                /* Content Area */
+                .lernmodul-content {
+                    line-height: 1.8;
+                    color: #374151;
+                }
+                
+                .lernmodul-content h3 {
+                    font-size: 28px;
+                    font-weight: 700;
+                    color: #1f2937;
+                    margin-bottom: 24px;
+                    letter-spacing: -0.02em;
+                }
+                
+                .lernmodul-content p {
+                    margin-bottom: 16px;
+                    font-size: 17px;
+                }
+                
+                .lernmodul-content strong {
+                    color: #1f2937;
+                    font-weight: 600;
+                }
+                
+                .lernmodul-content ul, .lernmodul-content ol {
+                    margin-bottom: 16px;
+                    padding-left: 24px;
+                }
+                
+                .lernmodul-content li {
+                    margin-bottom: 8px;
+                }
+                
+                .lernmodul-content blockquote {
+                    border-left: 4px solid #667eea;
+                    padding-left: 20px;
+                    margin: 24px 0;
+                    color: #6b7280;
+                    font-style: italic;
+                    background: #f9fafb;
+                    padding: 16px 20px;
+                    border-radius: 0 8px 8px 0;
+                }
+                
+                .lernmodul-content code {
+                    background: #f3f4f6;
+                    padding: 2px 8px;
+                    border-radius: 6px;
+                    font-size: 0.9em;
+                    font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+                    color: #e11d48;
+                }
+                
+                .lernmodul-content pre {
+                    background: #1f2937;
+                    color: #e5e7eb;
+                    padding: 20px;
+                    border-radius: 12px;
+                    overflow-x: auto;
+                    margin: 24px 0;
+                }
+                
+                .lernmodul-content pre code {
+                    background: none;
+                    padding: 0;
+                    color: inherit;
+                }
+                
+                .lernmodul-content img {
+                    max-width: 100%;
+                    border-radius: 8px;
+                    margin: 16px 0;
+                }
+                
+                .lernmodul-content a {
+                    color: #4c6586;
+                    text-decoration: underline;
+                    text-decoration-color: rgba(76, 101, 134, 0.3);
+                    text-underline-offset: 2px;
+                    transition: all 0.2s;
+                }
+                
+                .lernmodul-content a:hover {
+                    color: #667eea;
+                    text-decoration-color: #667eea;
+                }
+                
+                /* Responsive */
+                @media (max-width: 1024px) {
+                    .lernmodul-sidebar-column {
+                        width: 50px;
+                    }
+                    
+                    .lernmodul-sidebar-column .lernmodul-sidebar {
+                        padding: 12px;
+                    }
+                    
+                    .lernmodul-sidebar-column .lernmodul-sidebar-title {
+                        opacity: 0;
+                        width: 0;
+                    }
+                    
+                    .lernmodul-sidebar-column .lernmodul-chapter-list {
+                        display: none;
+                    }
+                    
+                    .lernmodul-sidebar-column .lernmodul-collapsed-indicator {
+                        display: flex;
+                    }
+                    
+                    .lernmodul-sidebar-column .lernmodul-toggle-btn {
+                        transform: rotate(180deg);
+                    }
+                    
+                    /* Expanded state on small screens */
+                    .lernmodul-sidebar-column.expanded {
+                        width: 280px;
+                    }
+                    
+                    .lernmodul-sidebar-column.expanded .lernmodul-sidebar {
+                        padding: 24px;
+                    }
+                    
+                    .lernmodul-sidebar-column.expanded .lernmodul-sidebar-title {
+                        opacity: 1;
+                        width: auto;
+                    }
+                    
+                    .lernmodul-sidebar-column.expanded .lernmodul-chapter-list {
+                        display: block;
+                    }
+                    
+                    .lernmodul-sidebar-column.expanded .lernmodul-collapsed-indicator {
+                        display: none;
+                    }
+                    
+                    .lernmodul-sidebar-column.expanded .lernmodul-toggle-btn {
+                        transform: rotate(0deg);
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .lernmodul-wrapper {
+                        padding: 16px 0;
+                    }
+                    
+                    .lernmodul-main-layout {
+                        flex-direction: column;
+                        gap: 20px;
+                    }
+                    
+                    .lernmodul-sidebar-column,
+                    .lernmodul-sidebar-column.expanded {
+                        width: 100%;
+                        order: -1;
+                    }
+                    
+                    .lernmodul-sidebar-column .lernmodul-sidebar,
+                    .lernmodul-sidebar-column.expanded .lernmodul-sidebar {
+                        position: static;
+                        max-height: none;
+                        padding: 16px;
+                    }
+                    
+                    .lernmodul-sidebar-column .lernmodul-sidebar-title,
+                    .lernmodul-sidebar-column.expanded .lernmodul-sidebar-title {
+                        opacity: 1;
+                        width: auto;
+                    }
+                    
+                    .lernmodul-sidebar-column .lernmodul-chapter-list {
+                        display: none;
+                    }
+                    
+                    .lernmodul-sidebar-column.expanded .lernmodul-chapter-list {
+                        display: block;
+                    }
+                    
+                    .lernmodul-sidebar-column .lernmodul-collapsed-indicator {
+                        display: none;
+                    }
+                    
+                    .lernmodul-sidebar-column .lernmodul-toggle-btn,
+                    .lernmodul-sidebar-column.expanded .lernmodul-toggle-btn {
+                        transform: rotate(90deg);
+                    }
+                    
+                    .lernmodul-sidebar-column.expanded .lernmodul-toggle-btn {
+                        transform: rotate(-90deg);
+                    }
+                    
+                    .lernmodul-container {
+                        padding: 24px;
+                        border-radius: 12px;
+                    }
+                    
+                    .lernmodul-header {
+                        flex-direction: column;
+                        gap: 20px;
+                        align-items: stretch;
+                    }
+                    
+                    .lernmodul-progress-container {
+                        max-width: 100%;
+                        margin-right: 0;
+                    }
+                    
+                    .lernmodul-nav-controls {
+                        justify-content: center;
+                    }
+                    
+                    .lernmodul-content h3 {
+                        font-size: 22px;
+                    }
                 }
             </style>
             
+            <div class='lernmodul-wrapper'>
+            <div class='lernmodul-main-layout'>
+            ";
+            
+            // Build page content with Markdown rendering
+            $page_content = $page['content'];
+            $page_title = htmlspecialchars($page['title']);
+            
+            // Build sidebar first (will appear on left)
+            $html_output = $nav_html;
+            // Build collapsed indicator dots
+            $collapsed_dots = "";
+            for ($i = 1; $i <= $total_pages; $i++) {
+                $dot_active = ($i === $current_page) ? " active" : "";
+                $collapsed_dots .= "<div class='lernmodul-collapsed-dot{$dot_active}'></div>";
+            }
+            
+            $html_output .= "
+            <!-- Sidebar Column (left) -->
+            <div class='lernmodul-sidebar-column' id='lernmodul-sidebar'>
+                <div class='lernmodul-sidebar'>
+                    <div class='lernmodul-sidebar-header'>
+                        <div class='lernmodul-sidebar-title'>Inhaltsverzeichnis</div>
+                        <button class='lernmodul-toggle-btn' onclick='toggleSidebar()' title='Inhaltsverzeichnis ein-/ausklappen'>◀</button>
+                    </div>
+                    <div class='lernmodul-collapsed-indicator'>
+                        {$collapsed_dots}
+                    </div>
+                    <ul class='lernmodul-chapter-list'>";
+            
+            $page_num = 1;
+            foreach ($all_pages as $p) {
+                $is_active = ($page_num === $current_page) ? " active" : "";
+                $chapter_link = $DIC->ctrl()->getLinkTarget($this, "view") . "&page=" . $page_num;
+                $chapter_title = htmlspecialchars($p['title']);
+                
+                $html_output .= "
+                        <li class='lernmodul-chapter-item'>
+                            <a href='{$chapter_link}' class='lernmodul-chapter-link{$is_active}'>
+                                <span class='lernmodul-chapter-number'>{$page_num}</span>
+                                <span class='lernmodul-chapter-title'>{$chapter_title}</span>
+                            </a>
+                        </li>";
+                $page_num++;
+            }
+            
+            $html_output .= "
+                    </ul>
+                </div>
+            </div>";
+            
+            // Then content column (will appear on right)
+            $html_output .= "
+            <!-- Content Column (right) -->
+            <div class='lernmodul-content-column'>
+            <div class='lernmodul-container'>
             <div class='lernmodul-header'>
                 <div class='lernmodul-progress-container'>
                     <div class='lernmodul-progress-bar'>
@@ -302,6 +794,40 @@ class ilObjMarkdownLernmodulGUI extends ilObjectPluginGUI
             </div>
             
             <script>
+            // Sidebar toggle
+            function toggleSidebar() {
+                var sidebar = document.getElementById('lernmodul-sidebar');
+                var isSmallScreen = window.innerWidth <= 1024;
+                
+                if (isSmallScreen) {
+                    sidebar.classList.toggle('expanded');
+                } else {
+                    sidebar.classList.toggle('collapsed');
+                }
+                
+                // Save state to localStorage
+                var isCollapsed = sidebar.classList.contains('collapsed') || 
+                                 (isSmallScreen && !sidebar.classList.contains('expanded'));
+                localStorage.setItem('lernmodul-sidebar-collapsed', isCollapsed);
+            }
+            
+            // Restore sidebar state on load
+            document.addEventListener('DOMContentLoaded', function() {
+                var sidebar = document.getElementById('lernmodul-sidebar');
+                var isSmallScreen = window.innerWidth <= 1024;
+                var savedState = localStorage.getItem('lernmodul-sidebar-collapsed');
+                
+                if (savedState === 'true') {
+                    if (isSmallScreen) {
+                        sidebar.classList.remove('expanded');
+                    } else {
+                        sidebar.classList.add('collapsed');
+                    }
+                } else if (savedState === 'false' && isSmallScreen) {
+                    sidebar.classList.add('expanded');
+                }
+            });
+            
             // Keyboard navigation
             document.addEventListener('keydown', function(e) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -315,18 +841,29 @@ class ilObjMarkdownLernmodulGUI extends ilObjectPluginGUI
             </script>
             ";
             
-            // Build page content
-            $html_output = $nav_html;
-            $html_output .= "<h3>" . htmlspecialchars($page['title']) . "</h3>";
-            $html_output .= "<div style='margin: 20px 0;'>" . nl2br(htmlspecialchars($page['content'])) . "</div>";
+            $html_output .= "
+            <div class='lernmodul-content'>";
+            $html_output .= "<h3>" . $page_title . "</h3>";
+            $html_output .= "<div id='page-content-md'></div>";
+            $html_output .= "</div></div></div>"; // Close content, container, content-column
+            
+            $html_output .= "</div></div>"; // Close main-layout, wrapper
+            
+            // Add Markdown rendering via marked.js
+            $html_output .= "
+            <script src='https://cdn.jsdelivr.net/npm/marked/marked.min.js'></script>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                marked.setOptions({ breaks: true, gfm: true });
+                var content = " . json_encode($page_content) . ";
+                document.getElementById('page-content-md').innerHTML = marked.parse(content);
+            });
+            </script>
+            ";
         }
         
-        $panel = $this->factory->panel()->standard(
-            $this->object->getTitle(),
-            $this->factory->legacy($html_output)
-        );
-
-        $this->tpl->setContent($this->renderer->render($panel));
+        // Output directly without panel wrapper (like ILIAS LearningModule does)
+        $this->tpl->setContent($html_output);
     }
     
     /**
