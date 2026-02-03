@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect x="8" y="8" width="48" height="48" rx="4" fill="#4c6586" opacity="0.9"/>
+  <rect x="12" y="12" width="40" height="40" rx="2" fill="white"/>
+  
+  <!-- Book pages -->
+  <line x1="32" y1="16" x2="32" y2="48" stroke="#4c6586" stroke-width="2"/>
+  
+  <!-- Left page content lines -->
+  <line x1="16" y1="20" x2="28" y2="20" stroke="#4c6586" stroke-width="1.5" opacity="0.6"/>
+  <line x1="16" y1="25" x2="28" y2="25" stroke="#4c6586" stroke-width="1.5" opacity="0.6"/>
+  <line x1="16" y1="30" x2="28" y2="30" stroke="#4c6586" stroke-width="1.5" opacity="0.6"/>
+  <line x1="16" y1="35" x2="26" y2="35" stroke="#4c6586" stroke-width="1.5" opacity="0.6"/>
+  
+  <!-- Right page content lines -->
+  <line x1="36" y1="20" x2="48" y2="20" stroke="#4c6586" stroke-width="1.5" opacity="0.6"/>
+  <line x1="36" y1="25" x2="48" y2="25" stroke="#4c6586" stroke-width="1.5" opacity="0.6"/>
+  <line x1="36" y1="30" x2="48" y2="30" stroke="#4c6586" stroke-width="1.5" opacity="0.6"/>
+  <line x1="36" y1="35" x2="46" y2="35" stroke="#4c6586" stroke-width="1.5" opacity="0.6"/>
+  
+  <!-- M letter for Modul -->
+  <text x="32" y="46" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#4c6586" text-anchor="middle">M</text>
+  
+  <!-- Navigation arrows -->
+  <path d="M 16 42 L 14 44 L 16 46" stroke="#4c6586" stroke-width="1.5" fill="none" opacity="0.8"/>
+  <path d="M 48 42 L 50 44 L 48 46" stroke="#4c6586" stroke-width="1.5" fill="none" opacity="0.8"/>
+</svg>

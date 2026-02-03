@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="http://www.ilias.de/Module" version="1.0">
+    <id>xmdl</id>
+    <type>xmdl</type>
+    <class_prefix>ilMarkdownLernmodul</class_prefix>
+</module>

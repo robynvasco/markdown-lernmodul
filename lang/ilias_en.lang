@@ -1,0 +1,35 @@
+obj_xmdl#:#Markdown Learning Module
+objs_xmdl#:#Markdown Learning Modules
+obj_xmdl_duplicate#:#Copy Markdown Learning Module
+obj_xmdl_select#:#Select Markdown Learning Module
+xmdl_add#:#Add Markdown Learning Module
+xmdl_new#:#New Markdown Learning Module
+rep_robj_xmdl_pl#:#Markdown Learning Modules
+rep_robj_xmdl_add#:#Create Learning Module
+crs_create_xmdl#:#Create Learning Module
+grp_create_xmdl#:#Create Learning Module
+fold_create_xmdl#:#Create Learning Module
+root_create_xmdl#:#Create Learning Module
+cat_create_xmdl#:#Create Learning Module
+
+config_general#:#General Settings
+config_ai_settings#:#AI Settings
+config_ai_enabled_label#:#Enable AI Features
+config_ai_enabled_info#:#Enable this option to allow AI-powered learning module page generation. When disabled, pages can only be created manually.
+config_available_services#:#Available Services
+config_gwdg_label#:#GWDG (Academic Cloud)
+config_google_label#:#Google Gemini API
+config_system_prompt_label#:#System Prompt for AI Generation
+config_system_prompt_info#:#Enter the system prompt that instructs the AI how to generate learning module pages. The AI will automatically determine the optimal number of pages based on topic complexity. Leave empty for default behavior.
+config_gwdg_key_label#:#GWDG API Key
+config_gwdg_key_info#:#Enter your GWDG API key
+config_gwdg_models_label#:#GWDG Models
+config_gwdg_stream_label#:#Enable Streaming
+config_gwdg_stream_info#:#Enable streaming responses from GWDG
+config_gwdg_models_error#:#Could not fetch available GWDG models
+config_google_key_label#:#Google Gemini API Key
+config_google_key_info#:#Enter your Google Gemini API key
+config_openai_model_label#:#OpenAI Model
+config_openai_key_label#:#OpenAI API Key
+config_openai_key_info#:#Enter your OpenAI API key from https://platform.openai.com/api-keys
+config_msg_success#:#Configuration saved successfully

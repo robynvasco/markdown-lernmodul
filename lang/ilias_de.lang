@@ -1,0 +1,32 @@
+obj_xmdl#:#Markdown Lernmodul
+objs_xmdl#:#Markdown Lernmodul
+obj_xmdl_duplicate#:#Markdown Lernmodul kopieren
+obj_xmdl_select#:#Markdown Lernmodul auswählen
+xmdl_add#:#Markdown Lernmodul hinzufügen
+xmdl_new#:#Neues Markdown Lernmodul
+rep_robj_xmdl_pl#:#Markdown Lernmodul
+rep_robj_xmdl_add#:#Lernmodul erstellen
+crs_create_xmdl#:#Lernmodul erstellen
+grp_create_xmdl#:#Lernmodul erstellen
+fold_create_xmdl#:#Lernmodul erstellen
+root_create_xmdl#:#Lernmodul erstellen
+cat_create_xmdl#:#Lernmodul erstellen
+
+config_general#:#Allgemeine Einstellungen
+config_ai_settings#:#KI-Einstellungen
+config_ai_enabled_label#:#KI-Funktionen aktivieren
+config_ai_enabled_info#:#Aktivieren Sie diese Option, um KI-gestützte Lernmodul-Generierung zu ermöglichen. Wenn deaktiviert, können Seiten nur manuell erstellt werden.
+config_available_services#:#Verfügbare Dienste
+config_gwdg_label#:#GWDG (Academic Cloud)
+config_google_label#:#Google Gemini API
+config_system_prompt_label#:#Systemaufforderung
+config_system_prompt_info#:#Die Systemaufforderung für die KI-Lernmodul-Generierung. Die KI bestimmt automatisch die optimale Anzahl der Seiten basierend auf der Themenkomplexität.
+config_gwdg_key_label#:#GWDG API-Schlüssel
+config_gwdg_key_info#:#Geben Sie Ihren GWDG API-Schlüssel ein
+config_gwdg_models_label#:#GWDG Modelle
+config_gwdg_stream_label#:#Streaming aktivieren
+config_gwdg_stream_info#:#Streaming-Antworten von GWDG aktivieren
+config_gwdg_models_error#:#Konnte verfügbare GWDG-Modelle nicht abrufen
+config_google_key_label#:#Google Gemini API-Schlüssel
+config_google_key_info#:#Geben Sie Ihren Google Gemini API-Schlüssel ein
+config_msg_success#:#Konfiguration erfolgreich gespeichert
